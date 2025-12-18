@@ -1,13 +1,16 @@
 name: Databricks - Deploy bundle
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "databricks.yml"
-      - "dlt/**"
-      - ".github/workflows/databricks-bundle.yml"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      databricks_host:
+        description: "Databricks workspace host (e.g. https://adb-....azuredatabricks.net)"
+        required: true
+        type: string
+      databricks_token:
+        description: "Databricks personal access token"
+        required: true
+        type: string
 
 jobs:
   deploy-bundle:
@@ -23,8 +26,8 @@ jobs:
       - name: Configure Databricks auth
         run: |
           databricks auth login \
-            --host "${{ secrets.DATABRICKS_HOST }}" \
-            --token "${{ secrets.DATABRICKS_TOKEN }}" \
+            --host "${{ inputs.databricks_host }}" \
+            --token "${{ inputs.databricks_token }}" \
             --name "github-actions"
 
       - name: Validate bundle
