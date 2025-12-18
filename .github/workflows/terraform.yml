@@ -3,6 +3,10 @@ name: Terraform - Azure infra
 on:
   workflow_dispatch: {}
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   TF_WORKING_DIR: Terraform
 

@@ -3,6 +3,10 @@ name: Terraform backend - Create Azure Storage
 on:
   workflow_dispatch: {}
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   TF_BACKEND_RG: eventstreamlab-tfstate-rg
   TF_BACKEND_SA: eventstreamlabtfstate
