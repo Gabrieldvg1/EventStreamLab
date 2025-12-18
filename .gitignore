@@ -1,0 +1,36 @@
+# Visual Studio / .NET build artifacts
+bin/
+obj/
+publish/
+publish-app/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS / Rider / IDE metadata
+.vs/
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Terraform local state & cache
+Terraform/.terraform/
+Terraform/.terraform.lock.hcl
+Terraform/terraform.tfstate
+Terraform/terraform.tfstate.backup
+Terraform/crash.log
+
+# Databricks bundle local artifacts (if any)
+.bundle/
+
+

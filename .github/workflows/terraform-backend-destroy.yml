@@ -1,0 +1,31 @@
+name: Terraform backend - Destroy Azure Storage
+
+on:
+  workflow_dispatch: {}
+
+env:
+  TF_BACKEND_RG: eventstreamlab-tfstate-rg
+
+jobs:
+  destroy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Delete Terraform backend resource group
+        run: |
+          az group delete \
+            --name "$TF_BACKEND_RG" \
+            --yes \
+            --no-wait
+
+

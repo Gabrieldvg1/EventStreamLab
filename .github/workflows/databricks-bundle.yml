@@ -1,0 +1,36 @@
+name: Databricks - Deploy bundle
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "databricks.yml"
+      - "dlt/**"
+      - ".github/workflows/databricks-bundle.yml"
+  workflow_dispatch: {}
+
+jobs:
+  deploy-bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@v1
+
+      - name: Configure Databricks auth
+        run: |
+          databricks auth login \
+            --host "${{ secrets.DATABRICKS_HOST }}" \
+            --token "${{ secrets.DATABRICKS_TOKEN }}" \
+            --name "github-actions"
+
+      - name: Validate bundle
+        run: databricks bundle validate --profile github-actions
+
+      - name: Deploy bundle
+        run: databricks bundle deploy --profile github-actions
+
+

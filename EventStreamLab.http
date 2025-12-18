@@ -1,0 +1,6 @@
+@EventStreamLab_HostAddress = http://localhost:5229
+
+GET {{EventStreamLab_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

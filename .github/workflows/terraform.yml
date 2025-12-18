@@ -1,0 +1,85 @@
+name: Terraform - Azure infra
+
+on:
+  workflow_dispatch: {}
+
+env:
+  TF_WORKING_DIR: Terraform
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform Init
+        id: init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -input=false
+
+      - name: Terraform Apply
+        id: apply
+        if: github.ref == 'refs/heads/main'
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -input=false -auto-approve
+
+      - name: Terraform Destroy on failure
+        if: failure() && steps.init.outcome == 'success'
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform destroy -input=false -auto-approve
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: needs.terraform.result == 'success'
+
+    env:
+      AZURE_WEBAPP_NAME: eventstreamlab-api
+      AZURE_WEBAPP_RG: eventstreamlab-rg
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore and publish
+        run: |
+          dotnet restore ./EventStreamLab.csproj
+          dotnet publish ./EventStreamLab.csproj -c Release -f net8.0 -o ./publish-app
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./publish-app
+
+
