@@ -30,6 +30,10 @@ jobs:
         with:
           terraform_version: 1.9.0
 
+      - name: Clean Terraform cache
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: rm -rf .terraform
+
       - name: Terraform Init
         id: init
         working-directory: ${{ env.TF_WORKING_DIR }}
