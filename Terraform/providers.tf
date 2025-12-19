@@ -18,6 +18,7 @@ terraform {
     storage_account_name = "eventstreamlabtfstate"
     container_name       = "tfstate"
     key                  = "eventstreamlab.tfstate"
+    use_azuread_auth     = true
   }
 }
 
