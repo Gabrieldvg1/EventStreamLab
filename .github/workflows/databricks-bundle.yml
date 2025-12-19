@@ -30,6 +30,36 @@ jobs:
             --token "${{ inputs.databricks_token }}" \
             --name "github-actions"
 
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure Event Hubs secret exists in Databricks
+        run: |
+          # Fetch Event Hubs connection string for the 'sendlisten' authorization rule
+          CONN=$(az eventhubs namespace authorization-rule keys list \
+            --resource-group eventstreamlab-rg \
+            --namespace-name eventstreamlab-ns \
+            --name sendlisten \
+            --query primaryConnectionString -o tsv)
+
+          if [ -z "$CONN" ]; then
+            echo "Failed to fetch Event Hubs connection string"; exit 1;
+          fi
+
+          # Create scope if it doesn't exist (ignore error if it already exists)
+          databricks secrets create-scope event-hubs \
+            --initial-manage-principal users \
+            --profile github-actions || true
+
+          # Upsert the Event Hubs connection string secret
+          databricks secrets put-secret event-hubs connection-string \
+            --string-value "$CONN" \
+            --profile github-actions
+
       - name: Validate bundle
         run: databricks bundle validate --profile github-actions
 
