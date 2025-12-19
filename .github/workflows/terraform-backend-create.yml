@@ -11,7 +11,7 @@ env:
   TF_BACKEND_RG: eventstreamlab-tfstate-rg
   TF_BACKEND_SA: eventstreamlabtfstate
   TF_BACKEND_CONTAINER: tfstate
-  TF_BACKEND_LOCATION: westeurope
+  TF_BACKEND_LOCATION: spaincentral
 
 jobs:
   create-backend:
