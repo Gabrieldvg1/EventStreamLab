@@ -18,6 +18,7 @@ jobs:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_BACKEND_CLIENT_SECRET }}
       TF_VAR_azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
 
     steps:
