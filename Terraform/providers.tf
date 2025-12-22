@@ -15,7 +15,11 @@ terraform {
     storage_account_name = "eventstreamlabtfstate"
     container_name       = "tfstate"
     key                  = "eventstreamlab.tfstate"
-    use_azuread_auth     = true
+
+    tenant_id       = var.backend_tenant_id
+    subscription_id = var.backend_subscription_id
+    client_id       = var.backend_client_id
+    client_secret   = var.backend_client_secret
   }
 }
 

@@ -14,18 +14,24 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    # Backend SP for state and OIDC provider for resources
     env:
+      # OIDC provider credentials
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_BACKEND_CLIENT_SECRET }}
-      TF_VAR_azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
+
+      # Backend SP credentials for Terraform state
+      TF_VAR_backend_client_id: ${{ secrets.AZURE_BACKEND_CLIENT_ID }}
+      TF_VAR_backend_client_secret: ${{ secrets.AZURE_BACKEND_CLIENT_SECRET }}
+      TF_VAR_backend_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+      TF_VAR_backend_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Azure login
+      - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -85,7 +91,7 @@ jobs:
           dotnet restore ./EventStreamLab.csproj
           dotnet publish ./EventStreamLab.csproj -c Release -f net8.0 -o ./publish-app
 
-      - name: Azure login
+      - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
