@@ -7,10 +7,10 @@ resource "azurerm_eventhub_namespace" "eh_ns" {
 }
 
 resource "azurerm_eventhub" "eh" {
-  name                = "demo-events"
-  namespace_id        = azurerm_eventhub_namespace.eh_ns.id
-  partition_count     = 1
-  message_retention   = 1
+  name              = "demo-events"
+  namespace_id      = azurerm_eventhub_namespace.eh_ns.id
+  partition_count   = 1
+  message_retention = 1
 }
 
 resource "azurerm_eventhub_authorization_rule" "eh_auth" {

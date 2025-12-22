@@ -7,39 +7,42 @@ on:
         description: "Databricks workspace host (e.g. https://adb-....azuredatabricks.net)"
         required: true
         type: string
-      databricks_token:
-        description: "Databricks personal access token"
-        required: true
-        type: string
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy-bundle:
     runs-on: ubuntu-latest
 
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Databricks CLI
-        uses: databricks/setup-cli@v1
-
-      - name: Configure Databricks auth
-        run: |
-          databricks auth login \
-            --host "${{ inputs.databricks_host }}" \
-            --token "${{ inputs.databricks_token }}" \
-            --name "github-actions"
-
-      - name: Azure login
+      - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@v1
+
+      - name: Configure Databricks CLI via Azure AD
+        run: |
+          databricks login --aad-token \
+            --host "${{ inputs.databricks_host }}"
+
       - name: Ensure Event Hubs secret exists in Databricks
         run: |
-          # Fetch Event Hubs connection string for the 'sendlisten' authorization rule
           CONN=$(az eventhubs namespace authorization-rule keys list \
             --resource-group eventstreamlab-rg \
             --namespace-name eventstreamlab-ns \
@@ -50,20 +53,14 @@ jobs:
             echo "Failed to fetch Event Hubs connection string"; exit 1;
           fi
 
-          # Create scope if it doesn't exist (ignore error if it already exists)
           databricks secrets create-scope event-hubs \
-            --initial-manage-principal users \
-            --profile github-actions || true
+            --initial-manage-principal users || true
 
-          # Upsert the Event Hubs connection string secret
           databricks secrets put-secret event-hubs connection-string \
-            --string-value "$CONN" \
-            --profile github-actions
+            --string-value "$CONN"
 
       - name: Validate bundle
-        run: databricks bundle validate --profile github-actions
+        run: databricks bundle validate
 
       - name: Deploy bundle
-        run: databricks bundle deploy --profile github-actions
-
-
+        run: databricks bundle deploy

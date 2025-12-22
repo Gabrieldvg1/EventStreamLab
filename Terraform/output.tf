@@ -1,5 +1,5 @@
 output "eventhub_connection_string" {
-  value = azurerm_eventhub_authorization_rule.eh_auth.primary_connection_string
+  value     = azurerm_eventhub_authorization_rule.eh_auth.primary_connection_string
   sensitive = true
 }
 

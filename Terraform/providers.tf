@@ -10,9 +10,6 @@ terraform {
     }
   }
 
-  # Remote backend in Azure Storage for Terraform state.
-  # The storage account & container are created by the
-  # 'Terraform backend - Create Azure Storage' GitHub Action.
   backend "azurerm" {
     resource_group_name  = "eventstreamlab-tfstate-rg"
     storage_account_name = "eventstreamlabtfstate"
@@ -28,9 +25,5 @@ provider "azurerm" {
 }
 
 provider "databricks" {
-  # Use the Databricks workspace that Terraform creates in databricks.tf
   host = azurerm_databricks_workspace.dbw.workspace_url
-
-  # Authentication is still provided via environment (for example, a PAT or AAD):
-  # - DATABRICKS_TOKEN for a PAT, or Azure AD settings (see Databricks docs)
 }
