@@ -50,16 +50,3 @@ jobs:
             --name "$TF_BACKEND_CONTAINER" \
             --account-name "$TF_BACKEND_SA"
 
-      - name: Assign backend SP permissions on storage account
-        env:
-          BACKEND_CLIENT_ID: ${{ secrets.AZURE_BACKEND_CLIENT_ID }}
-          SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-        run: |
-          SCOPE="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$TF_BACKEND_RG/providers/Microsoft.Storage/storageAccounts/$TF_BACKEND_SA"
-          echo "Using scope: $SCOPE"
-          az role assignment create \
-            --assignee "$BACKEND_CLIENT_ID" \
-            --role "Storage Blob Data Contributor" \
-            --scope "$SCOPE" || true
-
-
