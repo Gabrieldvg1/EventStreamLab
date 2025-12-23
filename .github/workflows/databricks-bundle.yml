@@ -42,9 +42,11 @@ jobs:
 
       - name: Ensure Event Hubs secret exists in Databricks
         run: |
-          CONN=$(az eventhubs namespace authorization-rule keys list \
+          # Fetch Event Hubs connection string for the Event Hub-level auth rule "sendlisten"
+          CONN=$(az eventhubs eventhub authorization-rule keys list \
             --resource-group eventstreamlab-rg \
             --namespace-name eventstreamlab-ns \
+            --eventhub-name demo-events \
             --name sendlisten \
             --query primaryConnectionString -o tsv)
 
