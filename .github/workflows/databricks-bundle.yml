@@ -38,8 +38,9 @@ jobs:
 
       - name: Configure Databricks CLI via Azure AD
         run: |
-          databricks login --aad-token \
-            --host "${{ inputs.databricks_host }}"
+          databricks auth login --aad-token \
+            --host "${{ inputs.databricks_host }}" \
+            --name github-actions
 
       - name: Ensure Event Hubs secret exists in Databricks
         run: |
