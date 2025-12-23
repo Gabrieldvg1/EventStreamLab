@@ -34,7 +34,7 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Set up Databricks CLI
-        uses: databricks/setup-cli@v1
+        uses: databricks/setup-cli@v3
 
       - name: Configure Databricks CLI via Azure AD
         run: |
