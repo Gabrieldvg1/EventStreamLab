@@ -22,6 +22,10 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       ARM_USE_OIDC: true
 
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_HOST: ${{ inputs.databricks_host }}
+      DATABRICKS_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,13 +38,7 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Set up Databricks CLI
-        uses: databricks/setup-cli@main
-
-      - name: Configure Databricks CLI via Azure AD
-        run: |
-          databricks auth login --aad-token \
-            --host "${{ inputs.databricks_host }}" \
-            --name github-actions
+        uses: databricks/setup-cli@v0.281.0
 
       - name: Ensure Event Hubs secret exists in Databricks
         run: |
