@@ -7,6 +7,10 @@ on:
         description: "Databricks workspace host (e.g. https://adb-....azuredatabricks.net)"
         required: true
         type: string
+      databricks_token:
+        description: "Databricks personal access token"
+        required: true
+        type: string
 
 permissions:
   id-token: write
@@ -16,21 +20,11 @@ jobs:
   deploy-bundle:
     runs-on: ubuntu-latest
 
-    env:
-      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      ARM_USE_OIDC: true
-
-      DATABRICKS_AUTH_TYPE: github-oidc
-      DATABRICKS_HOST: ${{ inputs.databricks_host }}
-      DATABRICKS_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Azure login (OIDC)
+      - name: Azure login (for az CLI)
         uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -39,6 +33,12 @@ jobs:
 
       - name: Set up Databricks CLI
         uses: databricks/setup-cli@v0.281.0
+
+      - name: Configure Databricks CLI via PAT
+        env:
+          DATABRICKS_HOST: ${{ inputs.databricks_host }}
+          DATABRICKS_TOKEN: ${{ inputs.databricks_token }}
+        run: databricks auth env --host "$DATABRICKS_HOST" --name github-actions
 
       - name: Ensure Event Hubs secret exists in Databricks
         run: |
@@ -55,13 +55,15 @@ jobs:
           fi
 
           databricks secrets create-scope event-hubs \
-            --initial-manage-principal users || true
+            --initial-manage-principal users \
+            --profile github-actions || true
 
           databricks secrets put-secret event-hubs connection-string \
-            --string-value "$CONN"
+            --string-value "$CONN" \
+            --profile github-actions
 
       - name: Validate bundle
-        run: databricks bundle validate
+        run: databricks bundle validate --profile github-actions
 
       - name: Deploy bundle
-        run: databricks bundle deploy
+        run: databricks bundle deploy --profile github-actions
