@@ -20,6 +20,10 @@ jobs:
   deploy-bundle:
     runs-on: ubuntu-latest
 
+    env:
+      DATABRICKS_HOST: ${{ inputs.databricks_host }}
+      DATABRICKS_TOKEN: ${{ inputs.databricks_token }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,12 +37,6 @@ jobs:
 
       - name: Set up Databricks CLI
         uses: databricks/setup-cli@v0.281.0
-
-      - name: Configure Databricks CLI via PAT
-        env:
-          DATABRICKS_HOST: ${{ inputs.databricks_host }}
-          DATABRICKS_TOKEN: ${{ inputs.databricks_token }}
-        run: databricks auth env --host "$DATABRICKS_HOST" --name github-actions
 
       - name: Ensure Event Hubs secret exists in Databricks
         run: |
@@ -55,15 +53,13 @@ jobs:
           fi
 
           databricks secrets create-scope event-hubs \
-            --initial-manage-principal users \
-            --profile github-actions || true
+            --initial-manage-principal users || true
 
           databricks secrets put-secret event-hubs connection-string \
-            --string-value "$CONN" \
-            --profile github-actions
+            --string-value "$CONN"
 
       - name: Validate bundle
-        run: databricks bundle validate --profile github-actions
+        run: databricks bundle validate
 
       - name: Deploy bundle
-        run: databricks bundle deploy --profile github-actions
+        run: databricks bundle deploy
