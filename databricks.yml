@@ -27,7 +27,7 @@ targets:
           # Simple single-cluster definition for the pipeline.
           clusters:
             - label: default
-              node_type_id: "Standard_DS3_v2"
+              node_type_id: "Standard_D4s_v3"
               autoscale:
                 min_workers: 1
                 max_workers: 1
