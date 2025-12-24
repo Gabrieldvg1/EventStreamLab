@@ -27,7 +27,7 @@ def _read_event_hubs_kafka_stream():
         "startingOffsets": "latest",
         "kafka.security.protocol": "SASL_SSL",
         "kafka.sasl.mechanism": "PLAIN",
-        "kafka.sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="{connection_string}";',
+        "kafka.sasl.jaas.config": f'kafkashaded.org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="{connection_string}";',
     }
 
     return (
