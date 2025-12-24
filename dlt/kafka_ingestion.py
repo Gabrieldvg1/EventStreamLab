@@ -1,27 +1,22 @@
 import dlt
 from pyspark.sql.functions import col
+from pyspark.sql import SparkSession
 
+spark = SparkSession.builder.getOrCreate()
 
 def _read_event_hubs_kafka_stream():
     """
-    Reads from Azure Event Hubs via its Kafka-compatible endpoint, using
+    Reads from Azure Event Hubs via its Kafka-compatible endpoint using
     configuration and secrets passed from the DLT pipeline.
     """
-    bootstrap_server = spark.conf.get("BOOTSTRAP_SERVER")
-    topic = spark.conf.get("EVENT_HUB_TOPIC")
-    secret_scope = spark.conf.get("EVENT_HUB_SECRET_SCOPE")
-    secret_key = spark.conf.get("EVENT_HUB_SECRET_KEY")
+    # Hardcoded values can be replaced by spark.conf if you want them configurable
+    bootstrap_server = "eventstreamlab-ns.servicebus.windows.net:9093"
+    topic = "demo-events"
 
-    if not bootstrap_server or not topic:
-        raise ValueError("BOOTSTRAP_SERVER and EVENT_HUB_TOPIC must be set in the pipeline configuration.")
+    # Fetch Event Hubs connection string securely from Databricks secrets
+    connection_string = dlt.secrets.get(scope="event-hubs", key="connection-string")
 
-    if not secret_scope or not secret_key:
-        raise ValueError("EVENT_HUB_SECRET_SCOPE and EVENT_HUB_SECRET_KEY must be set in the pipeline configuration.")
-
-    # Get the Event Hubs connection string from Databricks secrets.
-    connection_string = dbutils.secrets.get(secret_scope, secret_key)
-
-    # Kafka options for Azure Event Hubs (Kafka endpoint).
+    # Kafka options for Event Hubs (Kafka endpoint)
     kafka_options = {
         "kafka.bootstrap.servers": bootstrap_server,
         "subscribe": topic,
@@ -31,12 +26,7 @@ def _read_event_hubs_kafka_stream():
         "kafka.sasl.jaas.config": f'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="{connection_string}";',
     }
 
-    return (
-        spark.readStream
-        .format("kafka")
-        .options(**kafka_options)
-        .load()
-    )
+    return spark.readStream.format("kafka").options(**kafka_options).load()
 
 
 @dlt.table(
@@ -50,10 +40,8 @@ def events_raw():
     """
     df = _read_event_hubs_kafka_stream()
 
-    # Keep it simple: just cast the Kafka value to string and keep the event timestamp.
+    # Keep it simple: cast Kafka value to string and keep the timestamp
     return df.select(
         col("value").cast("string").alias("value"),
         col("timestamp").alias("ingest_ts"),
     )
-
-
