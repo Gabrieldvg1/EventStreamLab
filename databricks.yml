@@ -9,7 +9,7 @@ targets:
 
     # Point this directly at your Databricks workspace.
     workspace:
-      host: https://adb-7405610714120011.11.azuredatabricks.net
+      host: {}
 
     resources:
       # Delta Live Tables pipeline that reads from Event Hubs (Kafka endpoint)
