@@ -1,30 +1,26 @@
 bundle:
   name: eventstreamlab
 
-# Single-environment setup using Databricks Bundles.
 targets:
   default:
     mode: development
     default: true
 
-    # Point this directly at your Databricks workspace.
     workspace:
       host: {}
 
     resources:
-      # Delta Live Tables pipeline that reads from Event Hubs (Kafka endpoint)
       pipelines:
         events_pipeline:
           name: "eventstreamlab_events_pipeline"
 
-          # Use built-in hive metastore (no Unity Catalog). Only set target (database).
+          # Using hive_metastore.default
           target: "default"
 
           libraries:
             - file:
                 path: ./dlt/kafka_ingestion.py
 
-          # Simple single-cluster definition for the pipeline.
           clusters:
             - label: default
               node_type_id: "Standard_D4s_v3"
@@ -33,15 +29,22 @@ targets:
                 max_workers: 1
 
           configuration:
-            # Kafka / Event Hubs configuration passed to the DLT script.
+            # Kafka / Event Hubs
             BOOTSTRAP_SERVER: "eventstreamlab-ns.servicebus.windows.net:9093"
-            EVENT_HUB_TOPIC: "demo-events"
 
-            # Where the Event Hubs connection string is stored in Databricks secrets.
+            # Secrets
             EVENT_HUB_SECRET_SCOPE: "event-hubs"
             EVENT_HUB_SECRET_KEY: "connection-string"
 
-      # A job that can trigger the DLT pipeline
+            # NEW: config-driven ingestion
+            FLOWS: >
+              [
+                {
+                  "topic_name": "demo-events",
+                  "table_name": "events_raw"
+                }
+              ]
+
       jobs:
         run_events_pipeline:
           name: "Run EventStreamLab DLT pipeline"
@@ -49,5 +52,3 @@ targets:
             - task_key: run-events-pipeline
               pipeline_task:
                 pipeline_id: ${resources.pipelines.events_pipeline.id}
-
-
